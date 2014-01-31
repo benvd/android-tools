@@ -35,12 +35,13 @@ IGNORED = [
 ]
 
 # Width of various columns; set to -1 to hide
+TIME_WIDTH = 12
 USER_WIDTH = 3
 PROCESS_WIDTH = 8
 TAG_WIDTH = 20
 PRIORITY_WIDTH = 3
 
-HEADER_SIZE = USER_WIDTH + PROCESS_WIDTH + TAG_WIDTH + PRIORITY_WIDTH + 4
+HEADER_SIZE = TIME_WIDTH + USER_WIDTH + PROCESS_WIDTH + TAG_WIDTH + PRIORITY_WIDTH + 5
 
 # enable interactive mode only if we're printing to a tty, not if we're piping to someone
 interactive = sys.stdout.isatty()
@@ -115,7 +116,7 @@ PRIORITIES = {
     "F": "%s%s%s " % (format(fg=BLACK, bg=RED), "F".center(PRIORITY_WIDTH), format(reset=True)),
 }
 
-retag = re.compile("^([A-Z])/([^\(]+)\(([^\)]+)\): (.*)$")
+retag = re.compile("^([0-9-:.]*) ([0-9-:.]*) ([A-Z])/([^\(]+)\(([^\)]+)\): (.*)$")
 retime = re.compile("(?:(\d+)s)?([\d.]+)ms")
 reproc = re.compile(r"^I/ActivityManager.*?: Start proc .*?: pid=(\d+) uid=(\d+)")
 
@@ -139,7 +140,7 @@ adb_args = ' '.join(sys.argv[1:])
 
 # if someone is piping in to us, use stdin as input.  if not, invoke adb logcat
 if os.isatty(sys.stdin.fileno()):
-    input = os.popen("adb %s logcat" % adb_args)
+    input = os.popen("adb %s logcat -v time" % adb_args)
 else:
     input = sys.stdin
 
@@ -163,11 +164,16 @@ while True:
         print line
         continue
 
-    priority, tag, process, message = match.groups()
+    date, time, priority, tag, process, message = match.groups()
     linebuf = StringIO.StringIO()
 
     tag = tag.strip()
     if tag in IGNORED: continue
+
+    # write timestamp
+    if TIME_WIDTH > 0:
+        time = time[:TIME_WIDTH].center(TIME_WIDTH)
+        linebuf.write(time + " ")
 
     # center user info
     if USER_WIDTH > 0:
