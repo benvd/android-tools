@@ -20,7 +20,7 @@
 # written by jeff sharkey, http://jsharkey.org/
 # piping detection and popen() added by other android team members
 
-import os, sys, re, StringIO
+import os, sys, re, io
 import fcntl, termios, struct
 
 # List of tags to highlight (inverted)
@@ -51,7 +51,7 @@ if interactive:
     data = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, '1234')
     HEIGHT, WIDTH = struct.unpack('hh',data)
 
-BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = list(range(8))
 
 def format(fg=None, bg=None, bright=False, bold=False, dim=False, reset=False):
     # manually derived from http://en.wikipedia.org/wiki/ANSI_escape_code#Codes
@@ -70,7 +70,7 @@ def format(fg=None, bg=None, bright=False, bold=False, dim=False, reset=False):
 
 def indent_wrap(message, indent=0, width=80):
     wrap_area = width - indent
-    messagebuf = StringIO.StringIO()
+    messagebuf = io.StringIO()
     current = 0
     while current < len(message):
         next = min(current + wrap_area, len(message))
@@ -161,11 +161,11 @@ while True:
 
     match = retag.match(line)
     if not match:
-        print line
+        print(line)
         continue
 
     date, time, priority, tag, process, message = match.groups()
-    linebuf = StringIO.StringIO()
+    linebuf = io.StringIO()
 
     tag = tag.strip()
     if tag in IGNORED: continue
@@ -203,7 +203,7 @@ while True:
 
     # write out tagtype colored edge
     if not priority in PRIORITIES:
-        print line
+        print(line)
         continue
 
     linebuf.write(PRIORITIES[priority])
@@ -216,4 +216,4 @@ while True:
         message = indent_wrap(message, HEADER_SIZE, WIDTH)
 
     linebuf.write(message)
-    print linebuf.getvalue()
+    print(linebuf.getvalue())
