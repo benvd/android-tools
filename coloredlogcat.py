@@ -194,8 +194,9 @@ while True:
     # right-align tag title and allocate color if needed
     tag = tag.strip()
     if tag in HIGHLIGHT:
+        color = USER_COLORS[HIGHLIGHT.index(tag) % len(USER_COLORS)]
         tag = tag[-TAG_WIDTH:].rjust(TAG_WIDTH)
-        linebuf.write("%s%s%s " % (format(fg=BLACK, bg=WHITE, dim=False), tag, format(reset=True)))
+        linebuf.write("%s%s%s " % (format(fg=BLACK, bg=color, dim=False), tag, format(reset=True)))
     else:
         color = allocate_color(tag)
         tag = tag[-TAG_WIDTH:].rjust(TAG_WIDTH)
