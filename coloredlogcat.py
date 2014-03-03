@@ -22,6 +22,8 @@
 
 import os, sys, re, io
 import fcntl, termios, struct
+import threading
+from datetime import datetime
 
 # List of tags to highlight (inverted)
 HIGHLIGHT = [
@@ -143,6 +145,22 @@ if os.isatty(sys.stdin.fileno()):
     input = os.popen("adb %s logcat -v time" % adb_args)
 else:
     input = sys.stdin
+
+# thread to listen for keyboard input which prints multitail-like delimiters when Enter is pressed
+class MultitailThread(threading.Thread):
+
+    def run(self):
+        while True:
+            sys.stdin.read(1)
+            date = datetime.strftime(datetime.now(), "%Y/%m/%d %H:%M:%S")
+            dashes = '-' * ((WIDTH - len(date)) // 2)
+            print("%s%s%s%s%s" % (format(fg=BLACK, bg=RED), dashes, date, dashes, format(reset=True)))
+
+# only print those delimiters in interactive mode
+if interactive:
+    thread = MultitailThread()
+    thread.daemon = True
+    thread.start()
 
 while True:
     try:
